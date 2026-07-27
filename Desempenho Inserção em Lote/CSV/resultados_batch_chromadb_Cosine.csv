@@ -1,0 +1,5 @@
+DB,Metric,Batch_Size,Time_s,Throughput_vec_s
+ChromaDB,Cosine,100,76.7,1304.0
+ChromaDB,Cosine,1000,32.58,3070.0
+ChromaDB,Cosine,10000,22.81,4385.0
+ChromaDB,Cosine,50000,22.88,4371.0

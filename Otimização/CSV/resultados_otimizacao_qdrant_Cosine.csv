@@ -1,0 +1,10 @@
+DB,Metric,m,ef_search,Recall_10,p50_ms,RAM_GB
+Qdrant,Cosine,16,64,98.31,1.89,7.998
+Qdrant,Cosine,16,128,99.48,2.14,7.998
+Qdrant,Cosine,16,256,99.88,2.67,7.998
+Qdrant,Cosine,24,64,99.07,2.0,7.997
+Qdrant,Cosine,24,128,99.75,2.27,7.997
+Qdrant,Cosine,24,256,99.93,2.86,7.997
+Qdrant,Cosine,32,64,99.11,2.88,7.999
+Qdrant,Cosine,32,128,99.78,2.5,7.999
+Qdrant,Cosine,32,256,99.9,2.94,7.999

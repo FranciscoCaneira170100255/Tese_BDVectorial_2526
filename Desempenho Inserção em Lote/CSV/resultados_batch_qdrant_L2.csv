@@ -1,0 +1,5 @@
+DB,Metric,Batch_Size,Time_s,Throughput_vec_s
+Qdrant,L2,100,20.29,4930.0
+Qdrant,L2,1000,4.87,20538.0
+Qdrant,L2,10000,4.97,20110.0
+Qdrant,L2,50000,4.94,20249.0

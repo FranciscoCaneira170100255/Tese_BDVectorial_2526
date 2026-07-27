@@ -1,0 +1,5 @@
+DB,Metric,Batch_Size,Time_s,Throughput_vec_s
+Qdrant,Cosine,100,20.36,4912.0
+Qdrant,Cosine,1000,4.95,20192.0
+Qdrant,Cosine,10000,5.4,18531.0
+Qdrant,Cosine,50000,5.36,18663.0

@@ -1,0 +1,10 @@
+DB,Metric,m,ef_search,Recall_10,p50_ms,RAM_GB
+pgvector,Cosine,16,64,97.5,4.45,0.25
+pgvector,Cosine,16,128,99.28,7.3,0.25
+pgvector,Cosine,16,256,99.77,12.52,0.25
+pgvector,Cosine,24,64,98.65,5.8,0.26
+pgvector,Cosine,24,128,99.65,9.63,0.26
+pgvector,Cosine,24,256,99.85,16.07,0.26
+pgvector,Cosine,32,64,99.03,7.05,0.26
+pgvector,Cosine,32,128,99.72,11.61,0.26
+pgvector,Cosine,32,256,99.86,19.19,0.26

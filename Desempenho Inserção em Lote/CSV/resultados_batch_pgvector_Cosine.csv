@@ -1,0 +1,5 @@
+DB,Metric,Batch_Size,Time_s,Throughput_vec_s
+pgvector,Cosine,100,722.35,1384.0
+pgvector,Cosine,1000,722.49,1384.0
+pgvector,Cosine,10000,721.64,1386.0
+pgvector,Cosine,50000,721.2,1387.0

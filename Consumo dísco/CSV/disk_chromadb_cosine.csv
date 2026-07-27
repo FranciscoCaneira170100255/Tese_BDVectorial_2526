@@ -1,0 +1,2 @@
+DB,Metric,Index_MB,Metadata_MB,WAL_MB,Total_MB
+ChromaDB,COSINE,664.04,131.65,0.0,795.69

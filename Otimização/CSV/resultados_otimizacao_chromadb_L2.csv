@@ -1,0 +1,10 @@
+DB,Metric,m,ef_search,Recall_10,p50_ms,RAM_GB
+ChromaDB,L2,16,64,98.05,2.72,1.04
+ChromaDB,L2,16,128,98.05,2.54,1.04
+ChromaDB,L2,16,256,98.05,2.58,1.04
+ChromaDB,L2,24,64,98.81,7.3,1.1
+ChromaDB,L2,24,128,98.81,2.66,1.1
+ChromaDB,L2,24,256,98.81,4.53,1.1
+ChromaDB,L2,32,64,99.1,7.06,1.16
+ChromaDB,L2,32,128,99.1,2.71,1.16
+ChromaDB,L2,32,256,99.1,4.87,1.16

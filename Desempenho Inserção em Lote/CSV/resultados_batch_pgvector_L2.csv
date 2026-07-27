@@ -1,0 +1,5 @@
+DB,Metric,Batch_Size,Time_s,Throughput_vec_s
+pgvector,L2,100,654.49,1528.0
+pgvector,L2,1000,651.54,1535.0
+pgvector,L2,10000,651.13,1536.0
+pgvector,L2,50000,653.31,1531.0

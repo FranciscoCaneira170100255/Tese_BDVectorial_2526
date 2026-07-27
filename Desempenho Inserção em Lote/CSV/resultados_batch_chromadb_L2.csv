@@ -1,0 +1,5 @@
+DB,Metric,Batch_Size,Time_s,Throughput_vec_s
+ChromaDB,L2,100,76.59,1306.0
+ChromaDB,L2,1000,32.11,3114.0
+ChromaDB,L2,10000,23.14,4322.0
+ChromaDB,L2,50000,23.05,4339.0
