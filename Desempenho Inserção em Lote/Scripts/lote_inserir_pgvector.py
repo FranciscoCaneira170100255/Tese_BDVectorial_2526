@@ -80,7 +80,7 @@ def run_batch_insertion(metric: str):
         execute_values(
             cur,
             "INSERT INTO items (embedding) VALUES %s",
-            [(v,) for v in vectors],
+            [(v.tolist(),) for v in vectors],
             page_size=b_size
         )
 
