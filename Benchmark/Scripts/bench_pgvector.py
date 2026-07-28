@@ -109,8 +109,7 @@ def run_bench(metric: str):
     """)
     conn.commit()
 
-    # >>> ALTERAÇÃO B2/A1: Forçar uso do índice HNSW em TODAS as queries
-    # Isto resolve o problema A1 (sequential scan em Cosseno a escalas grandes)
+    # Forçar uso do índice HNSW nas queries todas
     cur.execute("SET enable_seqscan = off;")
     conn.commit()
 
@@ -168,11 +167,7 @@ def run_bench(metric: str):
                 conn.commit()
                 idx_time = time.perf_counter() - t1
 
-                # >>> ALTERAÇÃO A4: Coluna Idx = APENAS Index_Build_s
-                # A legenda da Tabela 4.1/4.2 diz "excluindo ingestão",
-                # e o CSV já escreve as duas colunas separadas.
-                # Garantimos que a tese usa Index_Build_s.
-
+              
                 cur.execute("ANALYZE sift_bench;")
                 conn.commit()
 
