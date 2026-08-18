@@ -2,6 +2,7 @@
 Benchmark de latência detalhada para pgvector.
 """
 import argparse
+import os
 import numpy as np
 import psycopg2
 import time
@@ -79,10 +80,15 @@ cur.execute(f"SET hnsw.ef_search = {EF_SEARCH};")
 # porque pode achar que é mais eficaz fazer um Sequencial Scan em vez de usar HNSW
 cur.execute("SET enable_seqscan = off;")
 
-# Warmup do buffer pool do PostgreSQL. As primeiras queries carregam páginas do disco para a RAM
+# Warmup do buffer pool do PostgreSQL. As primeiras queries carregam páginas do disco para a RAM.
 # Sem isto, o p50 fica enviesado com os cold misses iniciais
-print("A executar warmup (100 queries para aquecer buffer pool)...")
-for q in queries[:100]:
+# O warmup percorre a mesma carga de trabalho completa que vai ser medida a seguir
+# (as 10000 queries), não só uma amostra parcial, caso contrário, o buffer pool só fica
+# aquecido para a região do grafo HNSW mexida pela amostra e o resto das queries sofrem
+# cache misses reais já dentro do ciclo cronometrado (confirmado empiricamente pelos outliers
+# concentrados nos primeiros ~200 IDs a seguir à fronteira de uma amostra de warmup pequena)
+print(f"A executar warmup ({NUM_QUERIES} queries para aquecer buffer pool com a carga completa)...")
+for q in queries:
     cur.execute(f"SELECT id FROM {TABLE_NAME} ORDER BY embedding {QUERY_OP} %s::vector LIMIT 10;", (q,))
     cur.fetchall()
 
@@ -115,17 +121,18 @@ with open(CSV_FILE, "w", newline="") as f:
     for i, lat in enumerate(latencies):
         writer.writerow([i + 1, round(lat, 4)])
 
-#Print Results
-print("\nFeito! ->", CSV_FILE)
-print("\n=== RESULTADOS ===")
-print(f"p10   : {p[0]:.2f} ms")
-print(f"p25   : {p[1]:.2f} ms")
-print(f"p50   : {p[2]:.2f} ms (Mediana)")
-print(f"p75   : {p[3]:.2f} ms")
-print(f"p90   : {p[4]:.2f} ms")
-print(f"p95   : {p[5]:.2f} ms")
-print(f"p99   : {p[6]:.2f} ms")
-print(f"p99.9 : {p[7]:.2f} ms")
-print("-" * 30)
-print(f"Assimetria (Skewness) : {sk:.2f}")
-print(f"Curtose (Kurtosis)    : {ku:.2f}")
+RESUMO_FILE = "latencias_pgvector_resumo.csv"
+resumo_existe = os.path.isfile(RESUMO_FILE)
+with open(RESUMO_FILE, "a", newline="") as f:
+    writer = csv.writer(f)
+    if not resumo_existe:
+        writer.writerow([
+            "Motor", "Metrica", "p10", "p25", "p50", "p75", "p90",
+            "p95", "p99", "p99_9", "Skewness", "Kurtosis"
+        ])
+    writer.writerow([
+        "pgvector", args.metric,
+        f"{p[0]:.4f}", f"{p[1]:.4f}", f"{p[2]:.4f}", f"{p[3]:.4f}",
+        f"{p[4]:.4f}", f"{p[5]:.4f}", f"{p[6]:.4f}", f"{p[7]:.4f}",
+        f"{sk:.4f}", f"{ku:.4f}"
+    ])

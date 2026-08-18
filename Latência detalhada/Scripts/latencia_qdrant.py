@@ -2,6 +2,7 @@
 Benchmark de latência detalhada para Qdrant.
 """
 import argparse
+import os
 import numpy as np
 import time
 import csv
@@ -45,7 +46,7 @@ client = QdrantClient(host="localhost", port=6333)
 # O Qdrant usa mmap para mapear os ficheiros do disco para a RAM, 
 # as primeiras queries são lentas por causa de page faults.
 # Fazemos 500 queries de aquecimento para estabilizar a page cache do SO.
-# Sem isto, o p50 fica artificialmente elevado nas primeiras medições.
+# Sem isto, o p50 fica com valores artificialmente elevados nas primeiras medições.
 print("A executar warmup (500 queries para estabilizar page cache)...")
 for q in queries[:500]:
     client.search(
@@ -86,17 +87,18 @@ with open(CSV_FILE, "w", newline="") as f:
     for i, lat in enumerate(latencies):
         writer.writerow([i + 1, round(lat, 4)])
 
-#Print Results
-print("\nFeito! ->", CSV_FILE)
-print("\n=== RESULTADOS ===")
-print(f"p10   : {p[0]:.2f} ms")
-print(f"p25   : {p[1]:.2f} ms")
-print(f"p50   : {p[2]:.2f} ms (Mediana)")
-print(f"p75   : {p[3]:.2f} ms")
-print(f"p90   : {p[4]:.2f} ms")
-print(f"p95   : {p[5]:.2f} ms")
-print(f"p99   : {p[6]:.2f} ms")
-print(f"p99.9 : {p[7]:.2f} ms")
-print("-" * 30)
-print(f"Assimetria (Skewness) : {sk:.2f}")
-print(f"Curtose (Kurtosis)    : {ku:.2f}")
+RESUMO_FILE = "latencias_qdrant_resumo.csv"
+resumo_existe = os.path.isfile(RESUMO_FILE)
+with open(RESUMO_FILE, "a", newline="") as f:
+    writer = csv.writer(f)
+    if not resumo_existe:
+        writer.writerow([
+            "Motor", "Metrica", "p10", "p25", "p50", "p75", "p90",
+            "p95", "p99", "p99_9", "Skewness", "Kurtosis"
+        ])
+    writer.writerow([
+        "Qdrant", args.metric,
+        f"{p[0]:.4f}", f"{p[1]:.4f}", f"{p[2]:.4f}", f"{p[3]:.4f}",
+        f"{p[4]:.4f}", f"{p[5]:.4f}", f"{p[6]:.4f}", f"{p[7]:.4f}",
+        f"{sk:.4f}", f"{ku:.4f}"
+    ])
