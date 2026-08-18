@@ -1,5 +1,5 @@
 """
-SCRIPT DE ANÁLISE ESTATÍSTICA 
+Análise Estatística 
 Gera os p-valores (Teste t de Welch) para as Tabelas 4.1 e 4.2,
 comparando pgvector e ChromaDB contra o baseline (Qdrant) na latência p95.
 Inclui também Shapiro-Wilk e Mann-Whitney U para robustez metodológica.
@@ -33,7 +33,7 @@ CSV_FILES = {
 }
 
 def format_pvalue(p):
-    """Formata o p-valor conforme a convenção da tese."""
+    """Formatação do p-valor."""
     if pd.isna(p):
         return "—"
     if p < 0.001:
@@ -42,7 +42,7 @@ def format_pvalue(p):
 
 def run_statistical_analysis():
     print("="*70)
-    print(" ANÁLISE ESTATÍSTICA: Teste t de Welch (p95) vs Qdrant (Baseline)")
+    print("Teste t de Welch (p95) vs Qdrant (Baseline)")
     print("="*70)
     
     for metric in METRICS:
@@ -54,7 +54,7 @@ def run_statistical_analysis():
             df_p = pd.read_csv(CSV_FILES[metric]["pgvector"])
             df_c = pd.read_csv(CSV_FILES[metric]["chromadb"])
         except FileNotFoundError as e:
-            print(f"Erro: Ficheiro não encontrado. Verifica os caminhos no script:\n   {e}")
+            print(f"Erro: Ficheiro não encontrado. Verifique os caminhos no script:\n   {e}")
             continue
             
         results = []
@@ -66,7 +66,7 @@ def run_statistical_analysis():
             p95_c = df_c[df_c["Scale"] == scale]["p95_ms"].dropna().values
             
             if len(p95_q) < 2 or len(p95_p) < 2 or len(p95_c) < 2:
-                print(f"  ⚠️ Escala {scale}: Dados insuficientes (necessárias pelo menos 2 réplicas).")
+                print(f"Escala {scale}: Dados insuficientes (necessárias pelo menos 2 réplicas).")
                 continue
                 
             # 3. Teste de Shapiro-Wilk (Normalidade)
@@ -97,7 +97,7 @@ def run_statistical_analysis():
             
         # 6. Imprimir resultados formatados prontos para a tese
         df_results = pd.DataFrame(results)
-        print(f"\n✅ Resultados para Tabela 4.{'1' if metric == 'l2' else '2'} (Coluna 'p-valor'):")
+        print(f"\nResultados para Tabela 4.{'1' if metric == 'l2' else '2'} (Coluna 'p-valor'):")
         print("-" * 50)
         print(df_results[["Scale", "Welch_p_pgvector", "Welch_p_chromadb"]].to_string(index=False))
         print("-" * 50)
@@ -105,7 +105,7 @@ def run_statistical_analysis():
         # 7. Guardar em CSV
         out_file = os.path.join(BASE_DIR, f"analise_estatistica_{metric}.csv")
         df_results.to_csv(out_file, index=False)
-        print(f"💾 Resultados detalhados (com todos os testes) guardados em:\n   {out_file}")
+        print(f"Resultados detalhados (com todos os testes) guardados em:\n   {out_file}")
 
 if __name__ == "__main__":
     # Verificar dependências
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         import pandas
         import scipy
     except ImportError:
-        print(" Erro: é preciso instalar as dependências necessárias executando: pip install pandas scipy")
+        print("Erro: é preciso instalar as dependências necessárias executando: pip install pandas scipy")
         exit(1)
         
     run_statistical_analysis()
