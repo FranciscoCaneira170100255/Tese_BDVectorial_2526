@@ -88,7 +88,7 @@ wget ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz
 tar -xvzf sift.tar.gz
 ```
 
-### 4. Realizar a conversão de .fvecs /ivecs para npy
+### Realizar a conversão de .fvecs /ivecs para npy
 ```bash
 import numpy as np
 
@@ -118,4 +118,173 @@ print("Conversão concluída:")
 print("Base:", base.shape)
 print("Query:", query.shape)
 print("GT:", gt.shape)
+```
+### Gerar subconjuntos por escala (100 / 1.000 / 10.000 / 100.000 / 1.000.000 vetores)
+```bash
+import numpy as np
+from pathlib import Path
+
+# ---- CONFIGURAÇÃO ----
+INPUT_BASE = Path("data/sift/sift_base.npy")
+OUTPUT_DIR = Path("data/sift/subsets")
+
+SUBSET_SIZES = [100, 1_000, 10_000, 100_000, 1_000_000]
+
+# ---------------------
+
+def main():
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    print(f"[INFO] A carregar dataset base: {INPUT_BASE}")
+    base_vectors = np.load(INPUT_BASE)
+
+    total = base_vectors.shape[0]
+    print(f"[INFO] Total de vectores disponíveis: {total}")
+
+    for size in SUBSET_SIZES:
+        if size > total:
+            print(f"[WARN] A ignorar subset {size} (não existe)")
+            continue
+
+        subset = base_vectors[:size]  # determinístico
+        output_file = OUTPUT_DIR / f"sift_base_{size}.npy"
+
+        np.save(output_file, subset)
+        print(f"[OK] Criado {output_file} com shape {subset.shape}")
+
+    print("[DONE] Subsets gerados com sucesso")
+
+if __name__ == "__main__":
+    main()
+```
+### 4. Iniciar os contentores
+Cada motor tem o seu próprio docker-compose.yml, com CPU e RAM limitadas, via cgroups, 
+para garantir a paridade experimental (estes três contentores estão limitados a 4 núcleos de CPU e 8 GB de RAM):
+
+**`docker-compose-qdrant.yml`**
+```yaml
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.9.4
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    mem_limit: 8G
+    memswap_limit: 8G
+    cpus: "4"
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
+```
+
+**`docker-compose-pgvector.yml`**
+```yaml
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.1-pg16-bookworm
+    container_name: pgvector
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vectordb
+    shm_size: '4gb'
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    mem_limit: 8G
+    memswap_limit: 8G
+    cpus: "4"
+    restart: unless-stopped
+
+volumes:
+  pgvector_data:
+```
+
+**`docker-compose-chromadb.yml`**
+```yaml
+services:
+  chromadb:
+    image: chromadb/chroma:1.5.5
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadb_data:/chroma/.chroma/index
+    mem_limit: 8g
+    memswap_limit: 8g
+    cpus: 4
+    restart: unless-stopped
+
+volumes:
+  chromadb_data:
+```
+### Inicializar cada contentor:
+
+```bash
+docker compose -f docker-compose-qdrant.yml up -d
+docker compose -f docker-compose-pgvector.yml up -d
+docker compose -f docker-compose-chromadb.yml up -d
+```
+
+### Analisar se os contentores executam os serviços e os limites dos recursos estão a ser aplicados corretamente:
+```bash
+docker ps
+docker inspect qdrant | grep -i memory
+docker inspect pgvector | grep -i memory
+docker inspect chromadb | grep -i memory
+```
+
+### 5. Povoar os motores (preparando para os ensaios do disco e RAM)
+Os ensaios de consumo de disco, monitorização de RAM e latência detalhada requerem que cada motor contenha, previamente, uma coleção com 1M de vetores. Os scripts de preparação criam as coleções disk_test_l2 e disk_test_cosine em cada sistema:
+
+```bash
+python ram_inserir_qdrant.py   --metric l2
+python ram_inserir_pgvector.py --metric l2
+python ram_inserir_chromadb.py --metric l2
+```
+(procedimento idêntico com a opção --metric cosine para a Similaridade de Cosseno)
+
+### 6. Executar os ensaios
+A maioria dos scripts aceita como argumentos o `--metric l2` ou o `--metric cosine`:
+
+```bash
+python bench_qdrant.py     --metric l2
+python otimizacao_qdrant.py --metric cosine
+python latencia_pgvector.py --metric l2
+python escalabilidade_chromadb.py --metric cosine
+```
+
+### Pré-requisito específico: ensaios de arranque a frio (`cold_warm_*.py`)
+Estes scripts limpam a page cache do sistema operativo antes de cada réplica para garantir que o arranque ocorre efetivamente a frio. Este passo exige executar echo 3 > /proc/sys/vm/drop_caches com privilégios de administração, abortando a execução caso as permissões não sejam concedidas. É necessário configurar o comando no ficheiro sudoers sem pedido de palavra-passe:
+
+```bash
+sudo visudo
+```
+Adicionar a seguinte linha (substituindo `<utilizador>` pelo nome do utilizador do sistema operativo associado):
+
+```
+<utilizador> ALL=(ALL) NOPASSWD: /bin/sh -c echo 3 > /proc/sys/vm/drop_caches
+```
+
+### Pré-requisitos estruturais por script
+Nem todos os ensaios recorrem à mesma estrutura de dados. Antes de executar, convém validar a presença de tabelas e de coleções importantes:
+
+ Script | Estrutura esperada | Origem da criação |
+|---|---|---|
+| `latencia_qdrant.py`, `latencia_chromadb.py` | Coleções `disk_test_l2` / `disk_test_cosine` | `ram_inserir_qdrant.py` / `ram_inserir_chromadb.py` (passo 5) |
+| `latencia_pgvector.py` | Tabela `items` | Não é criada pelos scripts de preparação: o script cria o índice HNSW se não existir, mas a tabela e os vetores têm de ser carregados previamente |
+| `escalabilidade_pgvector.py` | Tabela `items` | Não é criada pelos scripts de preparação: o script recria o índice HNSW no arranque |
+| `escalabilidade_qdrant.py`, `escalabilidade_chromadb.py` | Coleções `sift1m_qdrant` / `sift1m_chroma` | Não são criadas por nenhum script deste repositório (ver nota abaixo) |
+| `cold_warm_chromadb.py` | Coleção `coldwarm_1m` | criada automaticamente pelo próprio script, se não existir |
+| `cold_warm_qdrant.py` | Coleção `cpu_test` | Não é criada pelo script, devendo existir previamente |
+| `bench_*.py`, `lote_inserir_*.py`, `disco_*.py`, `otimizacao_*.py` | Criam e removem as próprias estruturas | Gestão automática pelo script |
+
+Nota sobre os ensaios de otimização (`otimizacao_*.py`): correspondem à fase de maior exigência computacional de toda a campanha. Cada execução reconstrói o índice HNSW na íntegra sobre 1M de vetores em três ocasiões distintas (uma para cada valor de $m$), o que pode representar várias horas de processamento. O ficheiro `otimizacao_chromadb.py` reinicia o contentor a cada novo valor de `ef_search`, procedimento intencional e indispensável para forçar a biblioteca `hnswlib` a recarregar os metadados da coleção. Ainda assim, o valor de `ef_search` no ChromaDB mostrou-se invariante quanto ao `Recall@10`, consistindo numa particularidade arquitetural detalhada no documento da dissertação.
+
+Limitação de reprodutibilidade conhecida: As coleções `sift1m_qdrant`, `sift1m_chroma` e `cpu_test` foram povoadas manualmente na campanha experimental e não integram um script de preparação próprio neste repositório. Dado que os ensaios associados avaliam apenas throughput e latência (e não `Recall@10`), a validade das medições mantém-se inalterada. Contudo, a reprodução exata requer a criação prévia destas coleções com os mesmos parâmetros HNSW ($m=16$, $ef\_construction=200$) e 1M de vetores. Esta restrição metodológica encontra-se documentada na dissertação como trabalho futuro.
+
 
