@@ -287,4 +287,46 @@ Nota sobre os ensaios de otimização (`otimizacao_*.py`): correspondem à fase 
 
 Limitação de reprodutibilidade conhecida: As coleções `sift1m_qdrant`, `sift1m_chroma` e `cpu_test` foram povoadas manualmente na campanha experimental e não integram um script de preparação próprio neste repositório. Dado que os ensaios associados avaliam apenas throughput e latência (e não `Recall@10`), a validade das medições mantém-se inalterada. Contudo, a reprodução exata requer a criação prévia destas coleções com os mesmos parâmetros HNSW ($m=16$, $ef\_construction=200$) e 1M de vetores. Esta restrição metodológica encontra-se documentada na dissertação como trabalho futuro.
 
+###7. Monitorização temporal de RAM
+O script de análise do consumo de memória RAM atua como invólucro do comando em teste, aceitando o identificador do contentor, o ficheiro de destino e a instrução a monitorizar:
+
+```bash
+python3 monitorizar_ram.py --container chromadb \
+                           --output ram_chromadb_l2.csv \
+                           --cmd "python3 ram_inserir_chromadb.py --metric l2"
+
+python3 monitorizar_ram.py --container qdrant \
+                           --output ram_qdrant_cosine.csv \
+                           --cmd "python3 ram_inserir_qdrant.py --metric cosine"
+
+
+```
+
+A opção --clean elimina o volume Docker persistente antes do início do teste, garantindo que o registo parte de um estado limpo.
+
+***Nomenclatura doa volumes Docker:*** O ficheiro ``monitorizar_ram.py`` inclui nomes estáticos para os volumes (``docker_qdrant_data``, ``docker_chroma_data``, ``docker_pgvector_data``). O prefixo ``docker_`` decorre do padrão do Docker Compose (``<pasta>_<volume>``), assumindo que a inicialização ocorreu a partir de uma pasta denominada ``docker/``. Caso os comandos sejam executados a partir de outro diretório, os volumes terão prefixos distintos e a opção ``--clean`` não localizará o volume correto. Os nomes em uso devem ser confirmados através de ``docker volume ls``, ajustando-se a estrutura ``CONFIG`` no código fonte quando aplicável.
+
+### 8. Análise estatística
+Após gerar todos os ficheiros ``results_*.csv`` referentes ao ensaio base:
+
+```bash
+python analise_estatistica.py
+
+```
+**Importante:** O script procura os ficheiros ```results_*.csv``` na mesma pasta onde se encontra guardado. Deve verificar-se que os seis ficheiros de resultados (```results_qdrant_l2.csv```, ```results_pgvector_l2.csv```, ```results_chromadb_l2.csv``` e os respetivos equivalentes para Cosseno) estão na mesma diretoria antes do arranque. Para replicar:
+
+'- Abrir o csv no jamovi;
+'- Criar um filtro (`Scale == 1000000 and Motor !="ChromaDB"`, por exemplo);
+'- Executar indo a `Análises` -> `Testes t` -> `Teste T para amostras independentes` com `p95_ms` como variável dependente e `Motor` como variável de agrupamento
+
+São produzidos os ficheiros ```analise_estatistica_l2.csv``` e ```analise_estatistica_cosine.csv```, contendo os p-valores dos testes de Welch, Mann-Whitney U e Shapiro-Wilk para cada volume vetorial.
+
+A pasta `Análise Estatística/jamovi/` contém a verificação independente destes testes, realizada na aplicação [jamovi] (https://www.jamovi.org). Inclui os dados em formato longo (`jamovi_l2.csv` e `jamovi_cosine.csv`) e os relatórios exportados para as quatro comparações à escala de 1M de vetores. Para replicar:
+
+'- Abrir o csv no jamovi;
+'- Criar um filtro (`Scale == 1000000 and Motor !="ChromaDB"`, por exemplo);
+'- Executar indo a `Análises` -> Testes t -> Teste T para amostras independentes, marcando Welch, Mann-Whitney U e os testes de pressupostos.
+ 
+**Nota de reprodutibilidade:** A campanha de ensaios não recorre a um orquestrador centralizado (como um encadeamento global via Docker Compose). Cada rotina deve ser executada individualmente na ordem definida no protocolo de testes, diferenciando motor e métrica. Esta decisão metodológica encontra-se devidamente justificada no capítulo de limitações da dissertação.
+
 
