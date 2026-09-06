@@ -1,6 +1,6 @@
 """
 Análise Estatística 
-Gera os p-valores (Teste t de Welch) para as Tabelas 4.1 e 4.2,
+Gera os p-valores (Teste t de Welch) para as Tabelas 4.2 e 4.3,
 comparando pgvector e ChromaDB contra o baseline (Qdrant) na latência p95.
 Inclui também Shapiro-Wilk e Mann-Whitney U para robustez metodológica.
 """
