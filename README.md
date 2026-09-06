@@ -302,7 +302,7 @@ python3 monitorizar_ram.py --container qdrant \
 
 A opção --clean elimina o volume Docker persistente antes do início do teste, garantindo que o registo parte de um estado limpo.
 
-***Nomenclatura dos volumes Docker:*** O ficheiro ``monitorizar_ram.py`` inclui nomes estáticos para os volumes (``docker_qdrant_data``, ``docker_chroma_data``, ``docker_pgvector_data``). O prefixo ``docker_`` decorre do padrão do Docker Compose (``<pasta>_<volume>``), assumindo que a inicialização ocorreu a partir de uma pasta denominada ``docker/``. Caso os comandos sejam executados a partir de outro diretório, os volumes terão prefixos distintos e a opção ``--clean`` não localizará o volume correto. Os nomes em uso devem ser confirmados através de ``docker volume ls``, ajustando-se a estrutura ``CONFIG`` no código fonte quando aplicável.
+**Nomenclatura dos volumes Docker:** O ficheiro ``monitorizar_ram.py`` inclui nomes estáticos para os volumes (``docker_qdrant_data``, ``docker_chroma_data``, ``docker_pgvector_data``). O prefixo ``docker_`` decorre do padrão do Docker Compose (``<pasta>_<volume>``), assumindo que a inicialização ocorreu a partir de uma pasta denominada ``docker/``. Caso os comandos sejam executados a partir de outro diretório, os volumes terão prefixos distintos e a opção ``--clean`` não localizará o volume correto. Os nomes em uso devem ser confirmados através de ``docker volume ls``, ajustando-se a estrutura ``CONFIG`` no código fonte quando aplicável.
 
 ### 8. Análise estatística
 Após gerar todos os ficheiros ``results_*.csv`` referentes ao ensaio base:
