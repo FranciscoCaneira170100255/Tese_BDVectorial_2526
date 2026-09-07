@@ -22,7 +22,7 @@ O código está organizado por cenário experimental, onde cada diretoria corres
 | `Otimização/` | Varrimento paramétrico do HNSW ($m \in \{16,24,32\}$, $ef\_search \in \{64,128,256\}$) | Otimização Paramétrica |
 | `Desempenho Inserção em Lote/` | *Throughput* de inserção para diferentes tamanhos de lote (100 a 50.000 vetores) | Inserção em Lote |
 | `Cold Start Warm Cache/` | Comparação entre a primeira consulta após reinício e o regime de cache quente | Arranque a Frio vs. Cache Quente |
-| `Consumo disco/` | Medição do espaço em disco ocupado por dados, índice e metadados de cada motor | Consumo de Disco |
+| `Consumo Disco/` | Medição do espaço em disco ocupado por dados, índice e metadados de cada motor | Consumo de Disco |
 | `Escalabilidade/` | *Throughput* e latência sob carga concorrente crescente (1 a 32 *threads*) | Escalabilidade sob Concorrência |
 | `Latência detalhada/` | Distribuição completa de latência (percentis, assimetria, curtose) sobre 10.000 consultas sequenciais | Distribuição Detalhada de Latência |
 | `Monitorização RAM/` | Evolução temporal do consumo de RAM durante a construção do índice | Análise Temporal de RAM |
