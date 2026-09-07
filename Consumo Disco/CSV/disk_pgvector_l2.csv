@@ -1,0 +1,2 @@
+DB,Metric,Vectors_MB,HNSW_MB,WAL_MB,Total_MB
+pgvector,L2,558.04,780.62,1024.01,2362.66
