@@ -1,2 +1,0 @@
-DB,Metric,Segments_MB,WAL_MB,Metadata_MB,Total_MB
-Qdrant,COSINE,350.92,96.0,0.01,446.93

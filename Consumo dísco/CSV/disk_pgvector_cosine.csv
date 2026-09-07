@@ -1,2 +1,0 @@
-DB,Metric,Vectors_MB,HNSW_MB,WAL_MB,Total_MB
-pgvector,COSINE,558.04,780.45,1024.01,2362.49
