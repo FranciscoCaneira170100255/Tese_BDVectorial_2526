@@ -1,0 +1,15 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.9.4
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    mem_limit: 8G
+    memswap_limit: 8G
+    cpus: "4"
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:

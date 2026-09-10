@@ -1,0 +1,15 @@
+services:
+  chromadb:
+    image: chromadb/chroma:1.5.5
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadb_data:/chroma/.chroma/index
+    mem_limit: 8g
+    memswap_limit: 8g
+    cpus: 4
+    restart: unless-stopped
+
+volumes:
+  chromadb_data:
